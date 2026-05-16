@@ -40,7 +40,7 @@ export default function Home() {
           {!isLogin && (
             <>
               <label className="label">Full Name</label>
-              <input className="input-field" type="text" value={name} onChange={e => setName(e.target.value)} placeholder="Atharva Gupta" required={!isLogin} />
+              <input className="input-field" type="text" value={name} onChange={e => setName(e.target.value)} placeholder="Enter your name" required={!isLogin} />
             </>
           )}
           <label className="label">Email</label>
