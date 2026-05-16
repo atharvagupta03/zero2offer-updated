@@ -13,6 +13,7 @@ type Message = {
 export default function Dashboard() {
   const router = useRouter();
   const [userId, setUserId] = useState<string | null>(null);
+  const [userName, setUserName] = useState<string>("User");
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -25,10 +26,12 @@ export default function Dashboard() {
 
   useEffect(() => {
     const id = localStorage.getItem("user_id");
+    const name = localStorage.getItem("user_name");
     if (!id) {
       router.push("/");
     } else {
       setUserId(id);
+      if (name) setUserName(name);
       fetchHistory(id);
       
       const savedAnalysis = localStorage.getItem(`analysis_${id}`);
@@ -44,7 +47,7 @@ export default function Dashboard() {
       if (data.history && data.history.length > 0) {
         setMessages(data.history.map((m: any) => ({ role: m.role, content: m.content })));
       } else {
-        setMessages([{ role: "assistant", content: "Welcome to Zero2Offer. Please use the sidebar to upload your details, and I will generate your complete Readiness Report!" }]);
+        setMessages([{ role: "assistant", content: `Welcome to Zero2Offer, ${localStorage.getItem("user_name") || "Friend"}. Please use the sidebar to upload your details, and I will generate your complete Readiness Report!` }]);
       }
     } catch (err) { console.error("Failed to fetch history", err); }
   };
@@ -101,7 +104,7 @@ export default function Dashboard() {
       const res = await fetch(`${apiUrl}/api/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ user_id: userId, message: `Context:\n${context}\n\nUser: ${userMessage}` })
+        body: JSON.stringify({ user_id: userId, message: `Context:\n${context}\n\nUser (${userName}): ${userMessage}` })
       });
       const data = await res.json();
       if (!res.ok) {
@@ -118,6 +121,7 @@ export default function Dashboard() {
 
   const handleLogout = () => {
     localStorage.removeItem("user_id");
+    localStorage.removeItem("user_name");
     if (userId) {
       localStorage.removeItem(`messages_${userId}`);
       localStorage.removeItem(`analysis_${userId}`);
@@ -153,7 +157,8 @@ export default function Dashboard() {
         </form>
 
         <div style={{ marginTop: "auto", paddingTop: "2rem" }}>
-          <p style={{ fontSize: "0.75rem", color: "var(--text-secondary)", marginBottom: "1rem" }}>User: {userId?.substring(0, 8)}</p>
+          <p style={{ fontSize: "0.85rem", fontWeight: 600, color: "var(--text-primary)", marginBottom: "0.25rem" }}>{userName}</p>
+          <p style={{ fontSize: "0.75rem", color: "var(--text-secondary)", marginBottom: "1rem" }}>ID: {userId?.substring(0, 12)}</p>
           <button onClick={handleLogout} className="btn-primary" style={{ width: "100%", backgroundColor: "var(--surface-color)", color: "var(--text-primary)", border: "1px solid var(--border-color)" }}>
             Sign Out
           </button>

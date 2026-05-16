@@ -24,6 +24,11 @@ app.add_middleware(
 UPLOAD_DIR = "backend/mcp_server/data/uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
+class RegisterRequest(BaseModel):
+    name: str
+    email: str
+    password: str
+
 class LoginRequest(BaseModel):
     email: str
     password: str
@@ -33,16 +38,31 @@ class ChatRequest(BaseModel):
     message: str
 
 @app.post("/auth/register")
-async def register(req: LoginRequest):
-    # For now, simple registration; returns a mock user_id
-    # You would normally link this to Supabase
+async def register(req: RegisterRequest):
+    from backend.mcp_server.tools.profile import save_profile
     user_id = req.email.replace("@", "_").replace(".", "_")
-    return {"user_id": user_id, "status": "registered"}
+    profile_data = {
+        "user_id": user_id,
+        "name": req.name,
+        "email": req.email,
+        "target_role": "Career Seeker"
+    }
+    save_profile(user_id, json.dumps(profile_data))
+    return {"user_id": user_id, "name": req.name, "status": "registered"}
 
 @app.post("/auth/login")
 async def login(req: LoginRequest):
+    from backend.mcp_server.tools.profile import get_profile
     user_id = req.email.replace("@", "_").replace(".", "_")
-    return {"user_id": user_id, "status": "logged_in"}
+    profile_str = get_profile(user_id)
+    name = req.email.split("@")[0]
+    try:
+        profile = json.loads(profile_str)
+        if profile and "name" in profile:
+            name = profile["name"]
+    except:
+        pass
+    return {"user_id": user_id, "name": name, "status": "logged_in"}
 
 @app.post("/api/onboard")
 async def onboard(
