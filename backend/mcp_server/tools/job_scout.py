@@ -87,3 +87,28 @@ def fetch_multiple_job_descriptions(urls_json: str) -> str:
         desc = fetch_job_description(url)
         results.append(f"URL: {url}\n{desc}\n")
     return "\n\n".join(results)
+
+def search_web(query: str) -> str:
+    """Perform a web search using SerpAPI to find actual working study resources, tutorials, or articles."""
+    api_key = os.getenv("SERPAPI_KEY")
+    if not api_key:
+        return json.dumps({"error": "SERPAPI_KEY missing. Cannot perform live web search."})
+        
+    params = {
+        "engine": "google",
+        "q": query,
+        "api_key": api_key
+    }
+    try:
+        response = requests.get("https://serpapi.com/search", params=params, timeout=10)
+        data = response.json()
+        results = []
+        for res in data.get("organic_results", [])[:5]:
+            results.append({
+                "title": res.get("title"),
+                "link": res.get("link"),
+                "snippet": res.get("snippet")
+            })
+        return json.dumps({"results": results})
+    except Exception as e:
+        return json.dumps({"error": f"Search failed: {str(e)}"})

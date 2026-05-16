@@ -2,7 +2,7 @@ import os
 import json
 from openai import AsyncOpenAI
 from backend.mcp_server.tools.profile import get_profile, save_profile, read_resume
-from backend.mcp_server.tools.job_scout import search_jobs, fetch_job_description, fetch_multiple_job_descriptions
+from backend.mcp_server.tools.job_scout import search_jobs, fetch_job_description, fetch_multiple_job_descriptions, search_web
 
 # Client will be initialized inside ask_agent to prevent crash on startup if env is missing
 client = None
@@ -22,7 +22,8 @@ AVAILABLE_TOOLS = {
     "read_resume": read_resume,
     "search_jobs": search_jobs,
     "fetch_job_description": fetch_job_description,
-    "fetch_multiple_job_descriptions": fetch_multiple_job_descriptions
+    "fetch_multiple_job_descriptions": fetch_multiple_job_descriptions,
+    "search_web": search_web
 }
 
 TOOLS_DEFINITION = [
@@ -111,11 +112,25 @@ TOOLS_DEFINITION = [
                 "required": ["urls_json"]
             }
         }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "search_web",
+            "description": "Perform a live Google search to find verified working study resources, YouTube videos, courses, or tutorials.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "query": {"type": "string", "description": "Search query, e.g. 'best DSA tutorial youtube' or 'system design course'"}
+                },
+                "required": ["query"]
+            }
+        }
     }
 ]
 
 from backend.mcp_server.tools.profile import get_profile, save_profile, read_resume, get_chat_history, add_chat_message
-from backend.mcp_server.tools.job_scout import search_jobs, fetch_job_description, fetch_multiple_job_descriptions
+from backend.mcp_server.tools.job_scout import search_jobs, fetch_job_description, fetch_multiple_job_descriptions, search_web
 
 # ... (rest of the imports and definitions stay same)
 
@@ -136,7 +151,8 @@ async def ask_agent(user_id: str, user_input: str) -> str:
                - **Roadmap:** Provide a step-by-step plan to bridge those gaps.
             2. JOB SEARCH: Do NOT provide job links automatically. ONLY search for and provide job links if the user explicitly asks for them.
             3. PERSISTENCE: Use `get_profile` to recall user details. If they upload a new resume, use `read_resume` and update their profile with `save_profile`.
-            4. FORMATTING: Use standard Markdown. Links must be `[Apply Here](URL)`.
+            4. FORMATTING: Use standard Markdown. Links must be formatted as [Anchor Text](URL).
+            5. VERIFIED RESOURCES ONLY: NEVER hallucinate or make up YouTube links or tutorial URLs. Whenever a user asks for study resources, YouTube videos, courses, or interview prep materials, you MUST use the search_web tool to find real, working live links and present them to the user.
             
             You have full access to the user's previous conversation history. Use it to provide contextual and personalized advice.
         """}
