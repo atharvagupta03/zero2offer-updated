@@ -1,0 +1,26 @@
+# Dependencies
+node_modules/
+.pnp.*
+
+# Testing & Build output
+.next/
+out/
+build/
+dist/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+venv/
+env/
+.env
+
+# Local Storage/Uploads
+backend/mcp_server/data/uploads/
+*.sqlite3
+*.db
+
+# macOS
+.DS_Store
